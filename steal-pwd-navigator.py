@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import sqlite3
+import sys
 from datetime import datetime, timedelta
 
 from Crypto.Cipher import AES
@@ -152,3 +153,7 @@ if __name__ == '__main__':
             data = get_data(browser_path, "Default", master_key, data_type)
             save_results(browser, data_type_name, data)
             print("\t------\n")
+
+
+
+input("Appuyez sur une touche pour quitter...)
