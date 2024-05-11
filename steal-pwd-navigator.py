@@ -85,5 +85,3 @@ if __name__ == '__main__':
         data = get_data(chrome_path, "Default", master_key, data_type)
         save_results(data_type_name, data)
         print("\t------\n")
-
-input("Press any key to exit...")
