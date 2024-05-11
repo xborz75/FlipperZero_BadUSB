@@ -1,5 +1,7 @@
 import os
 import json
+import base64
+import shutil
 import sqlite3
 from Crypto.Cipher import AES
 from win32crypt import CryptUnprotectData
