@@ -1,5 +1,5 @@
 # Exécuter la commande netsh et stocker la sortie dans une variable
-$output = netsh wlan show profile * key=CLEAR
+$output = for /f "skip=9 tokens=1,2 delims=:" %i in ('netsh wlan show profiles') do @echo %j | findstr -i -v echo | netsh wlan show profiles %j key=clear
 
 # Chemin du répertoire du profil utilisateur actuel
 $userProfileDirectory = $env:USERPROFILE
